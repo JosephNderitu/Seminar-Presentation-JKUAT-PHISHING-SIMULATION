@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKUAT Student Portal — Secured</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --green:  #2e7d32;
+  --gray-bg:#f0f2f5;
+  --border: #e4e4e4;
+  --text:   #1a1a1a;
+  --muted:  #6b6b6b;
+}
+body {
+  font-family: 'Nunito', 'Segoe UI', sans-serif;
+  height: 100vh; display: flex; overflow: hidden;
+  background: #f5f5f5;
+}
+.left {
+  flex: 0 0 51%; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #1b5e20, #2e7d32, #388e3c);
+}
+.left img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
+.left::after { content:''; position:absolute; inset:0; background:rgba(0,0,0,0.15); pointer-events:none; }
+.left-text {
+  position:absolute; top:50%; left:0; transform:translateY(-50%);
+  width:100%; z-index:2; color:white; text-align:center;
+}
+.left-text h2 { font-size:38px; font-weight:800; text-shadow:0 2px 10px rgba(0,0,0,0.7); }
+
+.right {
+  flex:1; background:#f5f5f5; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:32px 44px;
+}
+.crest-img { width:96px; height:96px; border-radius:50%; object-fit:cover; margin-bottom:14px; }
+.crest-fallback {
+  width:96px; height:96px; border-radius:50%; background:var(--green);
+  color:white; font-size:36px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+}
+.welcome { font-size:26px; font-weight:800; color:var(--green); margin-bottom:4px; text-align:center; }
+.subtitle { font-size:14px; color:var(--muted); margin-bottom:22px; text-align:center; }
+
+/* Security badge */
+.sec-badge {
+  display:flex; align-items:center; gap:8px;
+  background:#e8f5e9; border:1px solid #a5d6a7;
+  border-radius:6px; padding:8px 14px;
+  font-size:12px; font-weight:700; color:var(--green);
+  margin-bottom:18px; width:100%; max-width:380px;
+}
+.sec-badge i { font-size:14px; }
+
+.card {
+  background:white; border-radius:10px; padding:28px 30px;
+  width:100%; max-width:380px;
+  box-shadow:0 1px 8px rgba(0,0,0,0.09);
+}
+
+label {
+  display:block; font-size:14px; font-weight:700; color:#111;
+  margin-bottom:5px; margin-top:14px;
+}
+label:first-of-type { margin-top:0; }
+.input-wrap { position:relative; }
+input[type="text"], input[type="password"] {
+  width:100%; padding:11px 38px 11px 12px;
+  border:1px solid #d4d4d4; border-radius:6px;
+  font-size:14px; color:#222; font-family:inherit;
+  outline:none; transition:border-color 0.18s, box-shadow 0.18s;
+}
+input:focus { border-color:#4caf50; box-shadow:0 0 0 3px rgba(76,175,80,0.14); }
+.eye-btn {
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; color:#aaa; font-size:14px;
+}
+.row-opts {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-top:12px; font-size:13px;
+}
+.remember { display:flex; align-items:center; gap:6px; color:#333; cursor:pointer; font-weight:400; }
+.remember input { width:14px; height:14px; accent-color:#4caf50; cursor:pointer; }
+.forgot { color:var(--green); font-weight:700; text-decoration:none; font-size:13px; }
+.forgot:hover { text-decoration:underline; }
+.btn-signin {
+  width:100%; margin-top:18px; padding:13px;
+  background:#4caf50; color:white; border:none; border-radius:6px;
+  font-size:15px; font-weight:800; cursor:pointer; font-family:inherit;
+  transition:background 0.18s;
+}
+.btn-signin:hover  { background:#43a047; }
+.btn-signin:active { background:#388e3c; }
+
+/* Rate limit info */
+.rate-info {
+  display:flex; align-items:flex-start; gap:8px;
+  background:#fff8e1; border:1px solid #ffe082;
+  border-radius:6px; padding:10px 12px; margin-top:14px;
+  font-size:12px; color:#f57f17; line-height:1.5;
+}
+.rate-info i { font-size:13px; margin-top:1px; flex-shrink:0; }
+
+.error-box {
+  background:#ffebee; border:1px solid #ef9a9a;
+  border-radius:6px; padding:10px 14px; margin-bottom:14px;
+  font-size:13px; color:#c62828; display:flex; align-items:center; gap:8px;
+}
+.error-box i { flex-shrink:0; }
+
+/* Security headers strip */
+.headers-strip {
+  margin-top:16px; width:100%; max-width:380px;
+  background:#f1f8e9; border:1px solid #c5e1a5; border-radius:8px; padding:12px 14px;
+}
+.headers-strip .hs-title {
+  font-size:11px; font-weight:700; color:#33691e; margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+.headers-strip .hs-list { display:flex; flex-wrap:wrap; gap:5px; }
+.header-tag {
+  font-size:10px; font-family:monospace; font-weight:700;
+  padding:2px 8px; border-radius:3px;
+  background:#dcedc8; color:#33691e; border:1px solid #aed581;
+}
+.signup-row { margin-top:16px; font-size:13.5px; color:#444; text-align:center; }
+.signup-row a { color:var(--green); font-weight:700; text-decoration:none; }
+.copyright { margin-top:10px; font-size:12px; color:var(--green); font-weight:700; text-align:center; }
+
+@media(max-width:700px){
+  body { flex-direction:column; height:auto; min-height:100vh; overflow-y:auto; }
+  .left { flex:none; width:100%; height:35vh; min-height:180px; }
+  .left-text { display:none; }
+  .right { padding:0 20px 32px; justify-content:flex-start; }
+  .crest-img { margin-top:-38px; width:72px; height:72px; box-shadow:0 2px 10px rgba(0,0,0,0.2); position:relative; z-index:10; padding:3px; background:white; }
+}
+</style>
+</head>
+<body>
+
+<div class="left">
+  <img src="https://portal.jkuat.ac.ke/uploads/be22f43e-d362-44f5-ad75-e224883eb3bb.JPG?v=3P-2NX_HfasdOgPYtoxcmLKZPOJ_MWoDkEbSlVyq4ao"
+       alt="JKUAT Campus" onerror="this.style.display='none'">
+  <div class="left-text"><h2>TECHNOLOGY FOR DEVELOPMENT</h2></div>
+</div>
+
+<div class="right">
+  <img class="crest-img"
+    src="https://portal.jkuat.ac.ke/uploads/04a5d996-6a6f-4c68-b985-d3c03fbc0245.jpg?v=jtXsPDg8VTUi7pGCz2u38V8ppoe2p6B_ZkbqL9ECUpw"
+    alt="JKUAT Crest"
+    onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/en/thumb/4/4a/JKUAT_logo.png/200px-JKUAT_logo.png'">
+
+  <div class="welcome">Hi, welcome back</div>
+  <div class="subtitle">Please fill in your details to log in</div>
+
+  <!-- Security badge — visible contrast with phishing portal -->
+  <div class="sec-badge">
+    <i class="fa-solid fa-lock"></i>
+    Hardened portal &nbsp;·&nbsp; MFA enabled &nbsp;·&nbsp; Rate limited &nbsp;·&nbsp; Secured headers
+  </div>
+
+  <div class="card">
+    {% if error %}
+    <div class="error-box"><i class="fa-solid fa-circle-xmark"></i> {{ error }}</div>
+    {% endif %}
+
+    <form action="/hardened/auth" method="POST" autocomplete="off">
+      <label for="reg_no">Username</label>
+      <input type="text" id="reg_no" name="reg_no"
+        placeholder="Student No / Employee No"
+        value="{{ reg_no or '' }}"
+        required autocomplete="off" spellcheck="false">
+
+      <label for="password">Password</label>
+      <div class="input-wrap">
+        <input type="password" id="password" name="password"
+          placeholder="Enter your password" required autocomplete="off">
+        <button type="button" class="eye-btn" onclick="togglePw()">
+          <i class="fa-regular fa-eye" id="eye-icon"></i>
+        </button>
+      </div>
+
+      <div class="row-opts">
+        <label class="remember"><input type="checkbox" name="remember"> Remember me</label>
+        <a href="#" class="forgot">Forgot Password?</a>
+      </div>
+
+      <button type="submit" class="btn-signin">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> &nbsp;Sign In
+      </button>
+    </form>
+
+    <div class="rate-info">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>This portal enforces a <strong>3-attempt limit per 60 seconds</strong>.
+      Repeated failed attempts will lock your IP for 5 minutes.</span>
+    </div>
+  </div>
+
+  <!-- Security headers visible proof -->
+  <div class="headers-strip">
+    <div class="hs-title"><i class="fa-solid fa-code"></i> Active security response headers</div>
+    <div class="hs-list">
+      <span class="header-tag">X-Frame-Options: DENY</span>
+      <span class="header-tag">X-Content-Type-Options</span>
+      <span class="header-tag">CSP</span>
+      <span class="header-tag">Permissions-Policy</span>
+      <span class="header-tag">HSTS</span>
+      <span class="header-tag">Referrer-Policy</span>
+    </div>
+  </div>
+
+  <div class="signup-row">Don't have an account? <a href="#">Sign Up</a></div>
+  <div class="copyright">Copyright &copy; 2026 — ABNO Softwares International</div>
+</div>
+
+<script>
+function togglePw() {
+  const pw   = document.getElementById('password');
+  const icon = document.getElementById('eye-icon');
+  if (pw.type === 'password') {
+    pw.type = 'text';
+    icon.className = 'fa-regular fa-eye-slash';
+  } else {
+    pw.type = 'password';
+    icon.className = 'fa-regular fa-eye';
+  }
+}
+</script>
+</body>
+</html>

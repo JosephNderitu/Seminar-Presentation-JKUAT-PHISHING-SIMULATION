@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚠ Security Awareness — JKUAT Demo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:       #080c12;
+  --bg2:      #0d1420;
+  --bg3:      #111927;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --red:      #ef4444;
+  --red-dark: #7f1d1d;
+  --red-glow: rgba(239,68,68,0.18);
+  --amber:    #f59e0b;
+  --teal:     #14b8a6;
+  --blue:     #3b82f6;
+  --green:    #22c55e;
+  --muted:    #475569;
+  --soft:     #94a3b8;
+  --text:     #e2e8f0;
+  --mono:     'JetBrains Mono', monospace;
+  --display:  'Syne', sans-serif;
+  --body:     'DM Sans', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCAN-LINE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── ANIMATED BACKGROUND GRID ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(239,68,68,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239,68,68,0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
+  z-index: 0;
+  animation: gridPan 30s linear infinite;
+}
+@keyframes gridPan { to { background-position: 44px 44px; } }
+
+/* ── REVEAL ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scanIn {
+  from { opacity: 0; transform: translateX(-8px); clip-path: inset(0 100% 0 0); }
+  to   { opacity: 1; transform: translateX(0);    clip-path: inset(0 0% 0 0); }
+}
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5), inset 0 0 40px rgba(239,68,68,0.06); }
+  50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0),  inset 0 0 60px rgba(239,68,68,0.12); }
+}
+@keyframes glitch {
+  0%,93%,100% { transform: none; }
+  94%  { transform: skewX(-1deg) translateX(2px); }
+  96%  { transform: skewX(1.5deg) translateX(-3px); }
+  98%  { transform: skewX(-0.5deg) translateX(1px); }
+}
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.reveal { opacity: 0; }
+.reveal.in { animation: fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+/* ── TOP BANNER ── */
+.top-banner {
+  position: relative; z-index: 10;
+  background: rgba(20,184,166,0.08);
+  border-bottom: 1px solid rgba(20,184,166,0.25);
+  padding: 10px 24px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: #5eead4;
+  letter-spacing: 0.3px;
+}
+.top-banner i { color: #2dd4bf; }
+.top-banner .sep { color: rgba(20,184,166,0.4); margin: 0 6px; }
+.live-indicator {
+  display: flex; align-items: center; gap: 6px;
+  margin-left: auto;
+}
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: blink 1.2s step-end infinite;
+}
+
+/* ── MAIN WRAPPER ── */
+.page { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 32px 20px 60px; }
+
+/* ── HERO ALERT ── */
+.hero {
+  background: linear-gradient(135deg, #1a0505 0%, #0f0000 60%, #140a0a 100%);
+  border: 1.5px solid var(--red);
+  border-radius: 16px;
+  padding: 44px 40px 40px;
+  text-align: center;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+  animation: pulse-border 3s ease-in-out infinite;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(239,68,68,0.15), transparent);
+  pointer-events: none;
+}
+.hero-skull {
+  font-size: 62px;
+  display: block;
+  margin-bottom: 16px;
+  animation: glitch 6s ease-in-out infinite;
+}
+.hero-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--red);
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 3px;
+  padding: 4px 10px;
+  margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(30px, 5vw, 46px);
+  font-weight: 800;
+  color: #fca5a5;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+.hero p {
+  font-size: 15px;
+  color: #fecaca;
+  line-height: 1.7;
+  max-width: 540px;
+  margin: 0 auto;
+  opacity: 0.9;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+}
+@media(max-width:600px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 14px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+.stat-card.red::before    { background: var(--red); }
+.stat-card.amber::before  { background: var(--amber); }
+.stat-card.blue::before   { background: var(--blue); }
+.stat-card.teal::before   { background: var(--teal); }
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.stat-card.red   .stat-icon { color: var(--red); }
+.stat-card.amber .stat-icon { color: var(--amber); }
+.stat-card.blue  .stat-icon { color: var(--blue); }
+.stat-card.teal  .stat-icon { color: var(--teal); }
+.stat-num {
+  font-family: var(--mono);
+  font-size: 22px; font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  animation: countUp 0.6s ease forwards;
+}
+.stat-card.red   .stat-num { color: var(--red); }
+.stat-card.amber .stat-num { color: var(--amber); }
+.stat-card.blue  .stat-num { color: var(--blue); }
+.stat-card.teal  .stat-num { color: var(--teal); }
+.stat-label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0.3px; }
+
+/* ── SECTION HEADER ── */
+.section-label {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+.section-label i { font-size: 12px; }
+.section-label.red   i, .section-label.red   { color: rgba(239,68,68,0.7); }
+.section-label.amber i, .section-label.amber { color: rgba(245,158,11,0.7); }
+.section-label.blue  i, .section-label.blue  { color: rgba(59,130,246,0.7); }
+.section-label.teal  i, .section-label.teal  { color: rgba(20,184,166,0.7); }
+.section-label .line {
+  flex: 1; height: 1px;
+  background: var(--border);
+}
+
+/* ── DATA CARD ── */
+.data-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.data-card .card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.data-card .card-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--soft);
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.data-card .card-title i { font-size: 12px; }
+.threat-pill {
+  font-family: var(--mono);
+  font-size: 9.5px; font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.threat-pill.high   { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.threat-pill.med    { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.threat-pill.low    { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.threat-pill.none   { background: rgba(100,116,139,0.15); color: #64748b; border: 1px solid rgba(100,116,139,0.2); }
+
+/* ── TWO-COLUMN TOP CARDS ── */
+.top-grid {
+  display: grid;
+  grid-template-columns: 196px 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media(max-width:560px) { .top-grid { grid-template-columns: 1fr; } }
+
+/* ── PHOTO CARD ── */
+.photo-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.photo-card .card-top {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  font-family: var(--mono);
+  font-size: 10px; letter-spacing: 1px;
+  color: var(--soft); text-transform: uppercase;
+  display: flex; align-items: center; gap: 7px;
+}
+.photo-card .photo-body {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 16px 14px; gap: 10px;
+}
+.photo-card img {
+  width: 154px; height: 116px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid var(--red);
+  box-shadow: 0 0 20px rgba(239,68,68,0.25);
+}
+.no-photo-box {
+  width: 154px; height: 116px;
+  background: var(--bg);
+  border: 1.5px dashed var(--muted);
+  border-radius: 6px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+}
+.no-photo-box i { font-size: 28px; }
+.no-photo-box span { font-size: 10px; text-align: center; line-height: 1.4; }
+.photo-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ── KV ROWS ── */
+.kv-list { padding: 4px 0; }
+.kv {
+  display: flex; align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+}
+.kv:last-child { border-bottom: none; }
+.kv .k {
+  color: var(--muted);
+  font-size: 12px;
+  flex-shrink: 0;
+  width: 148px;
+  font-weight: 500;
+}
+.kv .v {
+  color: var(--text);
+  font-weight: 500;
+  text-align: right;
+  word-break: break-all;
+}
+.kv .v.red   { color: var(--red);   font-family: var(--mono); font-size: 12.5px; }
+.kv .v.amber { color: var(--amber); }
+.kv .v.blue  { color: var(--blue);  }
+.kv .v.green { color: var(--green); }
+
+/* ── PASSWORD BOX ── */
+.pw-section { padding: 12px 18px; }
+.pw-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+.pw-box {
+  background: #1a0000;
+  border: 1.5px dashed rgba(239,68,68,0.5);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-family: var(--mono);
+  font-size: 22px; font-weight: 700;
+  color: var(--red);
+  text-align: center;
+  letter-spacing: 4px;
+  word-break: break-all;
+  text-shadow: 0 0 20px rgba(239,68,68,0.4);
+}
+
+/* ── UNIQUENESS BAR ── */
+.uniq-bar-wrap {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+}
+.uniq-track {
+  flex: 1; height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.uniq-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--red));
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+.uniq-pct { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--red); }
+
+/* ── LESSONS ── */
+.lessons-card {
+  background: linear-gradient(135deg, #0c1a2e 0%, #0a1628 100%);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.lessons-card .card-top {
+  background: rgba(59,130,246,0.06);
+  border-bottom: 1px solid rgba(59,130,246,0.15);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: 1px;
+  color: #93c5fd; text-transform: uppercase;
+}
+.lesson-item {
+  display: flex; align-items: flex-start;
+  gap: 14px;
+  padding: 13px 18px;
+  border-bottom: 1px solid rgba(59,130,246,0.08);
+  font-size: 13.5px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  transition: background 0.15s;
+}
+.lesson-item:last-child { border-bottom: none; }
+.lesson-item:hover { background: rgba(59,130,246,0.04); }
+.lesson-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 11px; font-weight: 700;
+  color: #60a5fa;
+  margin-top: 1px;
+}
+
+/* ── CALL TO ACTION BUTTONS ── */
+.cta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+@media(max-width:480px) { .cta-row { grid-template-columns: 1fr; } }
+.cta-btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.15s, transform 0.12s;
+  font-family: var(--body);
+}
+.cta-btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+.cta-btn:active { transform: translateY(0); }
+.cta-btn.ghost {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border2);
+  color: var(--soft);
+}
+.cta-btn.primary {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  color: white;
+  box-shadow: 0 4px 20px rgba(29,78,216,0.35);
+}
+
+/* ── FOOTER NOTE ── */
+.footer-note {
+  margin-top: 32px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  line-height: 1.8;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BANNER -->
+<div class="top-banner">
+  <i class="fa-solid fa-shield-halved"></i>
+  <span>JKUAT ICT Seminar</span>
+  <span class="sep">|</span>
+  <strong>Digital Infrastructure as a War Target</strong>
+  <span class="sep">|</span>
+  <span>Controlled Educational Simulation</span>
+  <div class="live-indicator" style="margin-left:16px">
+    <div class="live-dot"></div>
+    <span style="font-size:10px;color:#ef4444;font-weight:700">LIVE CAPTURE</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero reveal" style="animation-delay:0.05s">
+    <span class="hero-skull">☠</span>
+    <div class="hero-tag"><i class="fa-solid fa-triangle-exclamation"></i> &nbsp;SECURITY INCIDENT DETECTED</div>
+    <h1>You Just Got Phished.</h1>
+    <p>
+      That was <strong>not</strong> the real JKUAT portal.
+      The moment you clicked <em>Sign In</em>, your credentials, device fingerprint,
+      geolocation and camera image were captured — exactly as a real attacker would.
+    </p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row reveal" style="animation-delay:0.15s">
+    <div class="stat-card red">
+      <div class="stat-icon"><i class="fa-solid fa-key"></i></div>
+      <div class="stat-num">1</div>
+      <div class="stat-label">Credential set harvested</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon"><i class="fa-solid fa-fingerprint"></i></div>
+      <div class="stat-num" id="uniq-stat">—</div>
+      <div class="stat-label">Device uniqueness %</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon"><i class="fa-solid fa-location-dot"></i></div>
+      <div class="stat-num">0s</div>
+      <div class="stat-label">To geolocate you</div>
+    </div>
+    <div class="stat-card teal">
+      <div class="stat-icon"><i class="fa-solid fa-camera"></i></div>
+      <div class="stat-num" id="cam-stat">—</div>
+      <div class="stat-label">Camera frames taken</div>
+    </div>
+  </div>
+
+  {% if entry %}
+
+  <!-- PHOTO + GEO ROW -->
+  <div class="section-label red reveal" style="animation-delay:0.22s">
+    <i class="fa-solid fa-circle-radiation"></i>
+    <span>Evidence captured</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="top-grid reveal" style="animation-delay:0.28s">
+
+    <!-- Photo -->
+    <div class="photo-card">
+      <div class="card-top">
+        <i class="fa-solid fa-camera" style="color:var(--red)"></i>
+        Camera capture
+      </div>
+      <div class="photo-body">
+        {% if entry.photo %}
+          <img src="{{ entry.photo }}" alt="Captured photo">
+          <div class="photo-status" style="color:var(--red)">
+            <i class="fa-solid fa-circle-check"></i> Captured &amp; transmitted
+          </div>
+        {% else %}
+          <div class="no-photo-box">
+            <i class="fa-solid fa-camera-slash"></i>
+            <span>Camera denied or<br>unavailable</span>
+          </div>
+          <div class="photo-status" style="color:var(--muted)">
+            <i class="fa-solid fa-ban"></i> Permission not granted
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Geo -->
+    <div class="data-card">
+      <div class="card-top">
+        <span class="card-title"><i class="fa-solid fa-globe" style="color:var(--amber)"></i> Location &amp; Network</span>
+        <span class="threat-pill high">High Risk</span>
+      </div>
+      {% set g = entry.geo %}
+      {% if g and not g.get('error') %}
+      <div class="kv-list">
+        <div class="kv"><span class="k">IP Address</span>     <span class="v red">{{ g.get('ip','—') }}</span></div>
+        <div class="kv"><span class="k">City</span>           <span class="v amber">{{ g.get('city','—') }}</span></div>
+        <div class="kv"><span class="k">Region</span>         <span class="v">{{ g.get('region','—') }}</span></div>
+        <div class="kv"><span class="k">Country</span>        <span class="v">{{ g.get('country','—') }}</span></div>
+        <div class="kv"><span class="k">ISP / Carrier</span>  <span class="v blue">{{ g.get('isp','—') }}</span></div>
+        <div class="kv"><span class="k">Coordinates</span>    <span class="v" style="font-family:var(--mono);font-size:12px">{{ g.get('lat','—') }}, {{ g.get('lon','—') }}</span></div>
+      </div>
+      {% else %}
+      <div class="kv-list">
+        <div class="kv"><span class="k">IP Address</span><span class="v red">{{ entry.ip }}</span></div>
+        <div class="kv"><span class="k">Geo lookup</span><span class="v" style="color:var(--muted)">Unavailable (offline mode)</span></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- CREDENTIALS -->
+  <div class="section-label amber reveal" style="animation-delay:0.34s">
+    <i class="fa-solid fa-lock-open"></i>
+    <span>Stolen credentials</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="data-card reveal" style="animation-delay:0.4s">
+    <div class="card-top">
+      <span class="card-title"><i class="fa-solid fa-user-secret" style="color:var(--red)"></i> Captured Authentication Data</span>
+      <span class="threat-pill high">Critical</span>
+    </div>
+    <div class="kv-list">
+      <div class="kv">
+        <span class="k">Registration No.</span>
+        <span class="v amber">{{ entry.reg_no }}</span>
+      </div>
+      <div class="kv">
+        <span class="k">Timestamp</span>
+        <span class="v" style="font-family:var(--mono);font-size:12px">{{ entry.timestamp }}</span>
+      </div>
+      <div class="kv">
+        <span class="k">Device</span>
+        <span class="v">{{ entry.device }}</span>
+      </div>
+      <div class="kv">
+        <span class="k">Browser</span>
+        <span class="v">{{ entry.browser }}</span>
+      </div>
+      {% if entry.found and entry.student %}
+      <div class="kv" style="border-top:1px solid rgba(239,68,68,0.15);margin-top:4px;padding-top:4px">
+        <span class="k">Matched student</span>
+        <span class="v green">{{ entry.student.name }} — {{ entry.student.course }}</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="pw-section">
+      <div class="pw-label"><i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i> &nbsp;Password captured in plaintext</div>
+      <div class="pw-box">{{ entry.password }}</div>
+    </div>
+  </div>
+
+  <!-- DEVICE FINGERPRINT -->
+  {% set fp = entry.fingerprint %}
+  {% if fp %}
+  <div class="section-label blue reveal" style="animation-delay:0.46s">
+    <i class="fa-solid fa-microchip"></i>
+    <span>Device fingerprint — zero permissions required</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="data-card reveal" style="animation-delay:0.52s">
+    <div class="card-top">
+      <span class="card-title"><i class="fa-solid fa-fingerprint" style="color:var(--blue)"></i> Passive Browser Intelligence</span>
+      <span class="threat-pill med">Trackable</span>
+    </div>
+    <div class="kv-list">
+      <div class="kv"><span class="k">Screen Resolution</span> <span class="v" style="font-family:var(--mono);font-size:12px">{{ fp.get('screen','—') }} @ {{ fp.get('color_depth','—') }}</span></div>
+      <div class="kv"><span class="k">OS / Platform</span>     <span class="v">{{ fp.get('platform','—') }}</span></div>
+      <div class="kv"><span class="k">Language</span>           <span class="v">{{ fp.get('language','—') }}</span></div>
+      <div class="kv"><span class="k">Timezone</span>           <span class="v amber">{{ fp.get('timezone','—') }}</span></div>
+      <div class="kv"><span class="k">CPU Cores</span>          <span class="v">{{ fp.get('cores','—') }}</span></div>
+      <div class="kv"><span class="k">RAM</span>                <span class="v">{{ fp.get('memory','—') }}</span></div>
+      <div class="kv"><span class="k">Touch Points</span>       <span class="v">{{ fp.get('touch_points','—') }}</span></div>
+      <div class="kv"><span class="k">Do Not Track</span>       <span class="v">{{ fp.get('do_not_track','—') }}</span></div>
+      <div class="kv"><span class="k">Canvas Hash</span>        <span class="v red">{{ fp.get('canvas_hash','—') }}</span></div>
+      <div class="kv">
+        <span class="k">Uniqueness Score</span>
+        <span class="v" style="flex:1;display:flex;align-items:center;gap:10px;justify-content:flex-end">
+          <div class="uniq-bar-wrap">
+            <div class="uniq-track">
+              <div class="uniq-fill" id="uniq-fill" style="width:0%"></div>
+            </div>
+            <span class="uniq-pct" id="uniq-pct">{{ fp.get('uniqueness', 85) }}%</span>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div style="padding:10px 18px 14px;font-size:11px;color:var(--muted);font-family:var(--mono)">
+      * All data collected passively — zero permission prompts — just by loading this page.
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+
+  <!-- LESSONS -->
+  <div class="section-label teal reveal" style="animation-delay:0.58s">
+    <i class="fa-solid fa-book-open"></i>
+    <span>Why this works — the cyberwarfare connection</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="lessons-card reveal" style="animation-delay:0.64s">
+    <div class="card-top">
+      <i class="fa-solid fa-graduation-cap"></i>
+      Attack Breakdown &amp; Implications
+    </div>
+    <div class="lesson-item">
+      <div class="lesson-num">1</div>
+      <div>Your password was sent in plaintext to a server you don't control. <strong style="color:var(--text)">One credential = potential access to email, finance portal, VPN.</strong> This is how Colonial Pipeline started.</div>
+    </div>
+    <div class="lesson-item">
+      <div class="lesson-num">2</div>
+      <div>Your city, ISP and coordinates were obtained with <strong style="color:var(--text)">zero permission prompts</strong> — just an IP lookup. Nation-state actors use this to geo-target victims before launching spear-phishing campaigns.</div>
+    </div>
+    <div class="lesson-item">
+      <div class="lesson-num">3</div>
+      <div>Your device fingerprint is unique enough to <strong style="color:var(--text)">track you across the entire internet in incognito mode</strong> — no cookies, no login. You are identifiable right now.</div>
+    </div>
+    <div class="lesson-item">
+      <div class="lesson-num">4</div>
+      <div>Camera access required <strong style="color:var(--text)">one click on a fake "security verification"</strong> step. Real spear-phishing pages use identical flows — verify your identity, prove you're human, scan your face.</div>
+    </div>
+    <div class="lesson-item">
+      <div class="lesson-num">5</div>
+      <div><strong style="color:var(--text)">Ukraine 2015. Colonial Pipeline. Stuxnet. Lincoln College.</strong> All began with a phishing email and one employee who typed their password into the wrong box. You just experienced that moment.</div>
+    </div>
+  </div>
+
+  <!-- CTAs -->
+  <div class="cta-row reveal" style="animation-delay:0.72s">
+    <a href="/portal" class="cta-btn ghost">
+      <i class="fa-solid fa-arrow-left"></i> Back to phishing portal
+    </a>
+    <a href="/dashboard" class="cta-btn primary">
+      <i class="fa-solid fa-chart-line"></i> View attacker dashboard
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-note reveal" style="animation-delay:0.8s">
+    <i class="fa-solid fa-shield-halved"></i> &nbsp;
+    Controlled educational simulation — JKUAT ICT Seminar 2025<br>
+    All data is voluntarily submitted by briefed participants. Nothing is persisted beyond this session.
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// Staggered reveal on scroll/load
+const reveals = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.1 });
+reveals.forEach(el => io.observe(el));
+
+// Animate uniqueness bar
+{% set fp_val = entry.fingerprint.get('uniqueness', 85) if entry and entry.fingerprint else 85 %}
+window.addEventListener('load', () => {
+  const fill = document.getElementById('uniq-fill');
+  const stat  = document.getElementById('uniq-stat');
+  const uVal  = {{ fp_val }};
+  if(fill) setTimeout(() => { fill.style.width = uVal + '%'; }, 700);
+  if(stat) stat.textContent = uVal + '%';
+
+  // Camera stat
+  const camStat = document.getElementById('cam-stat');
+  {% if entry and entry.photo %}
+  if(camStat) camStat.textContent = '1';
+  {% else %}
+  if(camStat) { camStat.textContent = '0'; camStat.style.color = '#475569'; }
+  {% endif %}
+});
+</script>
+</body>
+</html>

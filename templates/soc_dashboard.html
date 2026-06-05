@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC Dashboard — JKUAT Cyberwarfare Demo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:       #07090f;
+  --bg2:      #0d1117;
+  --bg3:      #131920;
+  --bg4:      #1a2130;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.13);
+  --red:      #ef4444;
+  --red-dim:  rgba(239,68,68,0.15);
+  --amber:    #f59e0b;
+  --amber-dim:rgba(245,158,11,0.13);
+  --blue:     #3b82f6;
+  --blue-dim: rgba(59,130,246,0.13);
+  --green:    #22c55e;
+  --green-dim:rgba(34,197,94,0.13);
+  --teal:     #14b8a6;
+  --muted:    #4b5563;
+  --soft:     #9ca3af;
+  --text:     #e2e8f0;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'DM Sans', sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCAN LINE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+  pointer-events: none; z-index: 0;
+}
+
+@keyframes blink   { 50% { opacity: 0; } }
+@keyframes fadeUp  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+@keyframes flash   { 0%  { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+                     70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+                     100%{ box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+@keyframes slideIn { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:none; } }
+
+/* ── TOP BAR ── */
+.topbar {
+  position: relative; z-index: 10;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  padding: 0 24px;
+  height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.topbar-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: var(--red); letter-spacing: 1px;
+}
+.topbar-logo i { font-size: 16px; }
+.topbar-title {
+  font-size: 12px; font-weight: 600;
+  color: var(--soft); letter-spacing: 0.5px;
+}
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--red); letter-spacing: 1px;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--red);
+  animation: blink 1.2s step-end infinite;
+}
+.obj-badge {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 3px 8px; border-radius: 3px; letter-spacing: 1px;
+  background: rgba(139,92,246,0.15);
+  border: 1px solid rgba(139,92,246,0.3);
+  color: #a78bfa;
+}
+.topbar-btn {
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--soft); font-family: var(--mono); font-size: 11px;
+  padding: 5px 12px; border-radius: 4px; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.topbar-btn:hover { border-color: var(--red); color: var(--red); }
+.topbar-btn.danger { border-color: rgba(239,68,68,0.3); color: var(--red); }
+.topbar-btn.danger:hover { background: rgba(239,68,68,0.1); }
+
+/* ── STAT CARDS ── */
+.stats-row {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 1px; background: var(--border);
+  border-bottom: 1px solid var(--border2);
+}
+@media(max-width:640px){ .stats-row { grid-template-columns: repeat(2,1fr); } }
+.stat-card {
+  background: var(--bg2); padding: 16px 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.stat-icon-wrap {
+  width: 40px; height: 40px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 18px;
+}
+.stat-icon-wrap.red    { background: var(--red-dim);   color: var(--red);   }
+.stat-icon-wrap.amber  { background: var(--amber-dim); color: var(--amber); }
+.stat-icon-wrap.blue   { background: var(--blue-dim);  color: var(--blue);  }
+.stat-icon-wrap.green  { background: var(--green-dim); color: var(--green); }
+.stat-icon-wrap.teal   { background: rgba(20,184,166,0.13); color: var(--teal); }
+.stat-num {
+  font-family: var(--mono); font-size: 26px; font-weight: 700;
+  line-height: 1;
+}
+.stat-num.red   { color: var(--red);   }
+.stat-num.amber { color: var(--amber); }
+.stat-num.blue  { color: var(--blue);  }
+.stat-num.green { color: var(--green); }
+.stat-num.teal  { color: var(--teal);  }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+
+/* ── LAYOUT ── */
+.page { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 340px; min-height: calc(100vh - 52px - 73px); }
+@media(max-width:960px) { .page { grid-template-columns: 1fr; } }
+
+/* ── ALERT FEED (left) ── */
+.feed-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.panel-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg2);
+}
+.panel-title {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; color: var(--soft); text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title i { font-size: 13px; }
+.filter-row { display: flex; gap: 6px; }
+.filter-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px; cursor: pointer;
+  border: 1px solid var(--border2); background: none;
+  color: var(--muted); letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.filter-btn.active, .filter-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+.filter-btn.active-amber  { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+.filter-btn.active-blue   { border-color: var(--blue);  color: var(--blue);  background: var(--blue-dim);  }
+.filter-btn.active-all    { border-color: var(--soft);  color: var(--text);  background: rgba(255,255,255,0.06); }
+
+.alert-list { flex: 1; overflow-y: auto; }
+.alert-empty {
+  padding: 60px 20px; text-align: center;
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+}
+.alert-empty i { font-size: 32px; display: block; margin-bottom: 12px; color: var(--muted); }
+
+.alert-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.1s;
+  animation: slideIn 0.3s ease forwards;
+}
+.alert-item:hover { background: rgba(255,255,255,0.03); }
+.alert-item.selected { background: var(--bg3); border-left: 2px solid var(--red); }
+.alert-item.new { animation: flash 1s ease, slideIn 0.3s ease; }
+
+.sev-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 4px;
+}
+.sev-dot.CRITICAL { background: var(--red);   box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+.sev-dot.HIGH     { background: var(--amber); }
+.sev-dot.MEDIUM   { background: var(--blue);  }
+.sev-dot.LOW      { background: var(--green); }
+
+.alert-body { flex: 1; min-width: 0; }
+.alert-rule {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; margin-bottom: 3px;
+}
+.alert-rule.CRITICAL { color: var(--red);   }
+.alert-rule.HIGH     { color: var(--amber); }
+.alert-rule.MEDIUM   { color: var(--blue);  }
+.alert-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.alert-meta  { font-family: var(--mono); font-size: 10.5px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+.sev-pill {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 2px 7px; border-radius: 3px; letter-spacing: 0.8px;
+  flex-shrink: 0; align-self: flex-start; margin-top: 2px;
+}
+.sev-pill.CRITICAL { background: rgba(239,68,68,0.15);   color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.sev-pill.HIGH     { background: rgba(245,158,11,0.12);  color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.sev-pill.MEDIUM   { background: rgba(59,130,246,0.12);  color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+
+/* ── DETAIL PANEL (right) ── */
+.detail-panel {
+  background: var(--bg2); display: flex;
+  flex-direction: column; overflow: hidden;
+}
+.detail-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  gap: 10px; text-align: center; padding: 20px;
+}
+.detail-empty i { font-size: 36px; }
+
+.detail-content { flex: 1; overflow-y: auto; }
+.detail-top {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+.detail-rule {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; margin-bottom: 6px;
+}
+.detail-rule.CRITICAL { color: var(--red);   }
+.detail-rule.HIGH     { color: var(--amber); }
+.detail-rule.MEDIUM   { color: var(--blue);  }
+.detail-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; line-height: 1.35; }
+.detail-desc  { font-size: 12.5px; color: #9ca3af; line-height: 1.65; }
+.detail-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.detail-section-label {
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 1.2px; color: var(--muted); text-transform: uppercase;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.kv { display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-size: 12px; gap: 8px; }
+.kv:last-child { border-bottom: none; }
+.kv .k { color: var(--muted); flex-shrink: 0; width: 110px; }
+.kv .v { color: var(--text); font-family: var(--mono); font-size: 11.5px;
+  text-align: right; word-break: break-all; }
+.kv .v.red   { color: var(--red);   }
+.kv .v.amber { color: var(--amber); }
+
+/* ── RULE LEGEND ── */
+.legend-panel {
+  position: relative; z-index: 1;
+  background: var(--bg2);
+  border-top: 1px solid var(--border2);
+  padding: 12px 20px;
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+}
+.legend-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--muted); letter-spacing: 1px; margin-right: 4px;
+}
+.rule-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: 4px;
+  border: 1px solid var(--border2);
+  color: var(--soft); letter-spacing: 0.5px;
+}
+.rule-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+.rule-chip.c { border-color: rgba(239,68,68,0.3);   color: #fca5a5; }
+.rule-chip.c .dot { background: var(--red); }
+.rule-chip.h { border-color: rgba(245,158,11,0.3);  color: #fcd34d; }
+.rule-chip.h .dot { background: var(--amber); }
+.rule-chip.m { border-color: rgba(59,130,246,0.3);  color: #93c5fd; }
+.rule-chip.m .dot { background: var(--blue); }
+
+#status-bar {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  margin-left: auto;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">
+      <i class="fa-solid fa-shield-halved"></i> SOC
+    </div>
+    <span class="topbar-title">Security Operations Centre — JKUAT Cyberwarfare Demo</span>
+    <span class="obj-badge">OBJECTIVE 3A</span>
+  </div>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+    <button class="topbar-btn" onclick="toggleAuto()" id="auto-btn">
+      <i class="fa-solid fa-play"></i> Auto (3s)
+    </button>
+    <button class="topbar-btn danger" onclick="clearAll()">
+      <i class="fa-solid fa-trash"></i> Clear
+    </button>
+    <button class="topbar-btn" onclick="fetchAll()">
+      <i class="fa-solid fa-rotate-right"></i> Refresh
+    </button>
+  </div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-icon-wrap red"><i class="fa-solid fa-skull-crossbones"></i></div>
+    <div><div class="stat-num red" id="st-total">0</div><div class="stat-label">Total alerts fired</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap red"><i class="fa-solid fa-circle-exclamation"></i></div>
+    <div><div class="stat-num red" id="st-critical">0</div><div class="stat-label">Critical</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div><div class="stat-num amber" id="st-high">0</div><div class="stat-label">High</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap blue"><i class="fa-solid fa-info-circle"></i></div>
+    <div><div class="stat-num blue" id="st-medium">0</div><div class="stat-label">Medium</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap red"><i class="fa-solid fa-key"></i></div>
+    <div><div class="stat-num red" id="st-captures">0</div><div class="stat-label">Credentials harvested</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap amber"><i class="fa-solid fa-camera"></i></div>
+    <div><div class="stat-num amber" id="st-cameras">0</div><div class="stat-label">Camera captures</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap green"><i class="fa-solid fa-shield-halved"></i></div>
+    <div><div class="stat-num green" id="st-blocked">0</div><div class="stat-label">Attacks blocked</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap teal"><i class="fa-solid fa-network-wired"></i></div>
+    <div><div class="stat-num teal" id="st-ips">0</div><div class="stat-label">Unique IPs</div></div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="page">
+
+  <!-- ALERT FEED -->
+  <div class="feed-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fa-solid fa-list-ul"></i> Alert feed
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active-all active" id="f-all"      onclick="setFilter('ALL')">All</button>
+        <button class="filter-btn" id="f-critical" onclick="setFilter('CRITICAL')">Critical</button>
+        <button class="filter-btn" id="f-high"     onclick="setFilter('HIGH')">High</button>
+        <button class="filter-btn" id="f-medium"   onclick="setFilter('MEDIUM')">Medium</button>
+      </div>
+    </div>
+    <div class="alert-list" id="alert-list">
+      <div class="alert-empty">
+        <i class="fa-regular fa-circle"></i>
+        Waiting for captures...<br>Send the phishing portal link to trigger alerts.
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel">
+    <div class="panel-header">
+      <div class="panel-title"><i class="fa-solid fa-magnifying-glass"></i> Alert detail</div>
+    </div>
+    <div id="detail-view">
+      <div class="detail-empty">
+        <i class="fa-regular fa-file-lines"></i>
+        <span>Select an alert to<br>view evidence</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- RULE LEGEND -->
+<div class="legend-panel">
+  <span class="legend-title">RULES:</span>
+  <span class="rule-chip c"><span class="dot"></span> CRED_HARVEST</span>
+  <span class="rule-chip h"><span class="dot"></span> BRUTE_FORCE</span>
+  <span class="rule-chip h"><span class="dot"></span> GEO_ANOMALY</span>
+  <span class="rule-chip h"><span class="dot"></span> CAM_CAPTURE</span>
+  <span class="rule-chip m"><span class="dot"></span> FINGERPRINT</span>
+  <span class="rule-chip m"><span class="dot"></span> OFF_HOURS</span>
+  <span class="rule-chip c"><span class="dot"></span> BRUTE_FORCE_BLOCKED</span>
+  <span class="rule-chip c"><span class="dot"></span> LOCKOUT_ENFORCED</span>
+  <span id="status-bar">Ready.</span>
+</div>
+
+<script>
+let allAlerts    = [];
+let knownIds     = new Set();
+let activeFilter = 'ALL';
+let selectedId   = null;
+let autoTimer    = null;
+
+const SEV_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+
+function setStatus(t) { document.getElementById('status-bar').textContent = t; }
+
+async function fetchAll() {
+  try {
+    const [alertsRes, statsRes] = await Promise.all([
+      fetch('/api/alerts'),
+      fetch('/api/soc-stats')
+    ]);
+    allAlerts = await alertsRes.json();
+    const stats = await statsRes.json();
+    updateStats(stats);
+    renderAlerts();
+    setStatus('Updated: ' + new Date().toLocaleTimeString());
+  } catch(e) { setStatus('Error: ' + e.message); }
+}
+
+function updateStats(s) {
+  document.getElementById('st-total').textContent    = s.total_alerts    || 0;
+  document.getElementById('st-critical').textContent = s.critical         || 0;
+  document.getElementById('st-high').textContent     = s.high             || 0;
+  document.getElementById('st-medium').textContent   = s.medium           || 0;
+  document.getElementById('st-captures').textContent = s.total_captures   || 0;
+  document.getElementById('st-cameras').textContent  = s.cameras_taken    || 0;
+  document.getElementById('st-blocked').textContent  = s.blocked_attempts || 0;
+  document.getElementById('st-ips').textContent      = s.unique_ips       || 0;
+}
+
+function renderAlerts() {
+  const list = document.getElementById('alert-list');
+  const filtered = activeFilter === 'ALL'
+    ? allAlerts
+    : allAlerts.filter(a => a.severity === activeFilter);
+
+  const sorted = [...filtered].sort((a, b) =>
+    (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9) ||
+    b.timestamp.localeCompare(a.timestamp)
+  );
+
+  if (!sorted.length) {
+    list.innerHTML = `<div class="alert-empty">
+      <i class="fa-regular fa-circle"></i>
+      No ${activeFilter === 'ALL' ? '' : activeFilter + ' '}alerts yet.
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(a => {
+    const isNew = !knownIds.has(a.id);
+    const sel   = selectedId === a.id ? 'selected' : '';
+    return `
+    <div class="alert-item ${isNew ? 'new' : ''} ${sel}"
+         id="alert-${CSS.escape(a.id)}"
+         onclick="selectAlert(${JSON.stringify(a.id)})">
+      <div class="sev-dot ${a.severity}"></div>
+      <div class="alert-body">
+        <div class="alert-rule ${a.severity}">${a.rule}</div>
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-meta">
+          <span><i class="fa-solid fa-clock" style="font-size:9px"></i> ${a.timestamp}</span>
+          <span><i class="fa-solid fa-network-wired" style="font-size:9px"></i> ${a.ip}</span>
+          ${a.session_id ? `<span>Session #${a.session_id}</span>` : ''}
+        </div>
+      </div>
+      <div class="sev-pill ${a.severity}">${a.severity}</div>
+    </div>`;
+  }).join('');
+
+  allAlerts.forEach(a => knownIds.add(a.id));
+}
+
+function selectAlert(id) {
+  selectedId = id;
+  const a = allAlerts.find(x => x.id === id);
+  if (!a) return;
+
+  // Highlight selected row
+  document.querySelectorAll('.alert-item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('alert-' + id);
+  if (el) el.classList.add('selected');
+
+  // Build evidence rows
+  const ev = a.evidence || {};
+  const evRows = Object.entries(ev).map(([k,v]) => {
+    if (!v && v !== 0) return '';
+    const isRed = ['password','photo_captured','attempts'].includes(k);
+    const isAmb = ['ip','reg_no','country','otp_entered'].includes(k);
+    return `<div class="kv">
+      <span class="k">${k.replace(/_/g,' ')}</span>
+      <span class="v ${isRed?'red':isAmb?'amber':''}">${String(v).slice(0,80)}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('detail-view').innerHTML = `
+  <div class="detail-content">
+    <div class="detail-top">
+      <div class="detail-rule ${a.severity}">${a.rule} &nbsp;·&nbsp; ${a.severity}</div>
+      <div class="detail-title">${a.title}</div>
+      <div class="detail-desc">${a.description}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-label"><i class="fa-solid fa-clock"></i> Metadata</div>
+      <div class="kv"><span class="k">Timestamp</span><span class="v">${a.timestamp}</span></div>
+      <div class="kv"><span class="k">IP address</span><span class="v amber">${a.ip}</span></div>
+      <div class="kv"><span class="k">Session ID</span><span class="v">#${a.session_id}</span></div>
+      <div class="kv"><span class="k">Alert ID</span><span class="v" style="font-size:10px">${a.id.slice(0,40)}</span></div>
+    </div>
+    ${evRows ? `
+    <div class="detail-section">
+      <div class="detail-section-label"><i class="fa-solid fa-folder-open"></i> Evidence</div>
+      ${evRows}
+    </div>` : ''}
+    <div class="detail-section">
+      <div class="detail-section-label"><i class="fa-solid fa-book"></i> Rule description</div>
+      ${ruleDescription(a.rule)}
+    </div>
+  </div>`;
+}
+
+function ruleDescription(rule) {
+  const desc = {
+    CRED_HARVEST:       'Fires on every successful credential submission through the phishing portal. Captures plaintext password, registration number, device and browser. Severity: CRITICAL.',
+    BRUTE_FORCE:        'Fires when 3 or more login attempts are detected from the same IP address. Indicates automated credential stuffing or repeated manual attempts. Severity: HIGH.',
+    GEO_ANOMALY:        'Fires when the originating IP resolves to a country other than Kenya. Indicates possible VPN, proxy usage, or nation-state origin. Severity: HIGH.',
+    CAM_CAPTURE:        'Fires when a front-facing camera photo is successfully captured via the getUserMedia API disguised as a CAPTCHA verification step. Severity: HIGH.',
+    FINGERPRINT:        'Fires when passive browser fingerprinting yields a uniqueness score above 85%, enabling cross-session user tracking without cookies. Severity: MEDIUM.',
+    OFF_HOURS:          'Fires when a login attempt is recorded outside 06:00–22:00. May indicate automated attack scripts running overnight. Severity: MEDIUM.',
+    BRUTE_FORCE_BLOCKED:'Fired by the hardened portal when an IP exceeds 3 login attempts in 60 seconds and is locked out. Countermeasure active. Severity: CRITICAL.',
+    LOCKOUT_ENFORCED:   'Fired by the hardened portal when a locked IP attempts access before the lockout expires. Countermeasure holding. Severity: CRITICAL.',
+    MFA_FAILURE:        'Fired when an incorrect TOTP code is submitted on the hardened MFA step. Severity: HIGH.',
+    UNKNOWN_REG_NO:     'Fired when an unrecognised registration number is submitted to the hardened portal. Severity: MEDIUM.',
+  };
+  return `<div style="font-size:12px;color:#9ca3af;line-height:1.6">${desc[rule] || 'Custom detection rule.'}</div>`;
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('active','active-amber','active-blue','active-all');
+  });
+  const map = { ALL:'active-all', CRITICAL:'active', HIGH:'active-amber', MEDIUM:'active-blue' };
+  const ids = { ALL:'f-all', CRITICAL:'f-critical', HIGH:'f-high', MEDIUM:'f-medium' };
+  const btn = document.getElementById(ids[f]);
+  if (btn) btn.classList.add(map[f], 'active');
+  renderAlerts();
+}
+
+function toggleAuto() {
+  const btn = document.getElementById('auto-btn');
+  if (autoTimer) {
+    clearInterval(autoTimer); autoTimer = null;
+    btn.innerHTML = '<i class="fa-solid fa-play"></i> Auto (3s)';
+  } else {
+    autoTimer = setInterval(fetchAll, 3000);
+    btn.innerHTML = '<i class="fa-solid fa-pause"></i> Stop auto';
+    fetchAll();
+  }
+}
+
+async function clearAll() {
+  if (!confirm('Clear all captures and alerts?')) return;
+  await fetch('/api/reset', { method: 'POST' });
+  allAlerts = []; knownIds.clear(); selectedId = null;
+  document.getElementById('alert-list').innerHTML =
+    `<div class="alert-empty"><i class="fa-regular fa-circle"></i>Cleared.</div>`;
+  document.getElementById('detail-view').innerHTML =
+    `<div class="detail-empty"><i class="fa-regular fa-file-lines"></i><span>Select an alert</span></div>`;
+  fetchAll();
+}
+
+// Initial load + auto-start
+fetchAll();
+toggleAuto();
+</script>
+</body>
+</html>

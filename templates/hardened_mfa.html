@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKUAT Portal — Two-Factor Authentication</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh; background: #f0f2f5;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.container { width: 100%; max-width: 440px; }
+
+.card {
+  background: white; border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.card-header {
+  background: #2e7d32; padding: 22px 28px;
+  display: flex; align-items: center; gap: 14px;
+}
+.card-header img {
+  width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.4);
+}
+.header-text h2 { font-size: 17px; font-weight: 800; color: white; }
+.header-text p  { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+.card-body { padding: 26px 28px; }
+
+.step-indicator {
+  display: flex; align-items: center; gap: 0;
+  margin-bottom: 22px;
+}
+.step {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700;
+}
+.step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+}
+.step.done .step-num  { background: #4caf50; color: white; }
+.step.done .step-text { color: #4caf50; }
+.step.active .step-num  { background: #2e7d32; color: white; }
+.step.active .step-text { color: #2e7d32; }
+.step.pending .step-num  { background: #e0e0e0; color: #999; }
+.step.pending .step-text { color: #999; }
+.step-line { flex: 1; height: 2px; background: #e0e0e0; margin: 0 8px; }
+.step-line.done { background: #4caf50; }
+
+.mfa-title { font-size: 18px; font-weight: 800; color: #1a1a1a; margin-bottom: 6px; }
+.mfa-sub   { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.55; }
+
+/* QR code section */
+.qr-section {
+  background: #f8f9fa; border: 1px solid #e0e0e0;
+  border-radius: 10px; padding: 18px; margin-bottom: 20px;
+  text-align: center;
+}
+.qr-section img {
+  width: 148px; height: 148px; border-radius: 6px;
+  border: 3px solid #2e7d32; margin-bottom: 10px;
+}
+.qr-label { font-size: 12px; color: #666; margin-bottom: 6px; }
+.qr-instructions {
+  font-size: 12px; color: #444; line-height: 1.55;
+}
+.qr-instructions strong { color: #2e7d32; }
+.qr-apps {
+  display: flex; justify-content: center; gap: 12px; margin-top: 10px;
+}
+.app-tag {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  background: #e8f5e9; color: #2e7d32;
+  border-radius: 20px; border: 1px solid #a5d6a7;
+}
+.no-qr-note {
+  font-size: 12px; color: #888; margin-bottom: 16px;
+  padding: 10px 12px; background: #f5f5f5; border-radius: 6px;
+  border-left: 3px solid #4caf50;
+}
+
+/* OTP input */
+.otp-label { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 8px; }
+.otp-input-wrap { display: flex; gap: 8px; margin-bottom: 6px; }
+.otp-input {
+  flex: 1; padding: 14px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px; font-weight: 700; letter-spacing: 6px;
+  text-align: center; border: 2px solid #d4d4d4;
+  border-radius: 8px; outline: none; color: #1a1a1a;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.otp-input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76,175,80,0.15);
+}
+.otp-hint { font-size: 12px; color: #888; margin-bottom: 18px; }
+
+.error-box {
+  background: #ffebee; border: 1px solid #ef9a9a; border-radius: 6px;
+  padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #c62828;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.btn-verify {
+  width: 100%; padding: 13px; border-radius: 8px; border: none;
+  background: #2e7d32; color: white;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  font-family: inherit; transition: background 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-verify:hover { background: #1b5e20; }
+
+.back-link {
+  display: block; text-align: center; margin-top: 14px;
+  font-size: 13px; color: #888; text-decoration: none;
+}
+.back-link:hover { color: #2e7d32; }
+
+/* Timer */
+.totp-timer { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.timer-track { flex: 1; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; }
+.timer-fill  { height: 100%; background: #4caf50; border-radius: 2px; transition: width 1s linear; }
+.timer-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; min-width: 24px; }
+
+/* Obj label */
+.obj-label {
+  text-align: center; margin-bottom: 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  color: #7c3aed;
+  font-family: 'JetBrains Mono', monospace;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="obj-label">OBJECTIVE 3B — HARDENED PORTAL — MFA STEP</div>
+  <div class="card">
+    <div class="card-header">
+      <img src="https://portal.jkuat.ac.ke/uploads/04a5d996-6a6f-4c68-b985-d3c03fbc0245.jpg?v=jtXsPDg8VTUi7pGCz2u38V8ppoe2p6B_ZkbqL9ECUpw"
+           alt="JKUAT" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/thumb/4/4a/JKUAT_logo.png/200px-JKUAT_logo.png'">
+      <div class="header-text">
+        <h2>Two-Factor Authentication</h2>
+        <p>Jomo Kenyatta University of Agriculture and Technology</p>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step done">
+          <div class="step-num"><i class="fa-solid fa-check" style="font-size:10px"></i></div>
+          <span class="step-text">Credentials</span>
+        </div>
+        <div class="step-line done"></div>
+        <div class="step active">
+          <div class="step-num">2</div>
+          <span class="step-text">Verify identity</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step pending">
+          <div class="step-num">3</div>
+          <span class="step-text">Access granted</span>
+        </div>
+      </div>
+
+      <div class="mfa-title"><i class="fa-solid fa-mobile-screen-button" style="color:#2e7d32;margin-right:6px"></i>Verify your identity</div>
+      <p class="mfa-sub">
+        Your credentials for <strong>{{ reg_no }}</strong> were accepted.
+        Enter the 6-digit code from your authenticator app to complete sign-in.
+      </p>
+
+      {% if error %}
+      <div class="error-box"><i class="fa-solid fa-circle-xmark"></i> {{ error }}</div>
+      {% endif %}
+
+      {% if qr_code %}
+      <div class="qr-section">
+        <div class="qr-label"><i class="fa-solid fa-qrcode"></i> First time? Scan this QR code to set up your authenticator</div>
+        <img src="data:image/png;base64,{{ qr_code }}" alt="TOTP QR Code">
+        <div class="qr-instructions">
+          Open <strong>Google Authenticator</strong> or <strong>Authy</strong>,
+          tap the + button, and scan this code.
+        </div>
+        <div class="qr-apps">
+          <span class="app-tag">Google Authenticator</span>
+          <span class="app-tag">Authy</span>
+          <span class="app-tag">Microsoft Authenticator</span>
+        </div>
+      </div>
+      {% else %}
+      <div class="no-qr-note">
+        <i class="fa-solid fa-circle-info" style="color:#4caf50;margin-right:6px"></i>
+        Open your authenticator app and enter the current 6-digit code for <strong>JKUAT Portal (Secured)</strong>.
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/hardened/mfa">
+        <div class="otp-label"><i class="fa-solid fa-key" style="color:#2e7d32;margin-right:4px"></i>6-digit verification code</div>
+        <div class="otp-input-wrap">
+          <input type="text" name="otp_code" id="otp_code" class="otp-input"
+            placeholder="000000" maxlength="6" inputmode="numeric"
+            pattern="[0-9]{6}" autocomplete="one-time-code" autofocus required>
+        </div>
+        <div class="otp-hint">Code refreshes every 30 seconds &nbsp;·&nbsp; <span style="color:#f59e0b;font-weight:700">Demo fallback: use <code>000000</code></span></div>
+
+        <!-- TOTP countdown -->
+        <div class="totp-timer">
+          <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+          <span class="timer-label" id="timer-label">30s</span>
+        </div>
+
+        <br>
+        <button type="submit" class="btn-verify">
+          <i class="fa-solid fa-shield-check"></i> Verify and sign in
+        </button>
+      </form>
+
+      <a href="/hardened" class="back-link">
+        <i class="fa-solid fa-arrow-left" style="font-size:11px"></i> Back to login
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// OTP input: only allow digits
+document.getElementById('otp_code').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g,'').slice(0,6);
+});
+
+// TOTP 30s countdown
+function updateTimer() {
+  const now  = Math.floor(Date.now() / 1000);
+  const secs = 30 - (now % 30);
+  const pct  = (secs / 30) * 100;
+  document.getElementById('timer-fill').style.width  = pct + '%';
+  document.getElementById('timer-label').textContent = secs + 's';
+  document.getElementById('timer-fill').style.background = secs <= 8 ? '#f59e0b' : '#4caf50';
+}
+updateTimer();
+setInterval(updateTimer, 1000);
+</script>
+</body>
+</html>

